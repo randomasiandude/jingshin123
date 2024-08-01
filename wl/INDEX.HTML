@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Management</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/styles.css"> <!-- Link to CSS -->
+</head>
+<style>
+   .container {
+            background-color: lightgrey; /* Light grey background for the container */
+        }
+</style>
+<body>
+    <!-- Font Size Adjustment Controls -->
+    <div class="font-controls">
+        <button id="decreaseFont">放小-</button>
+        <button id="increaseFont">放大+</button>
+    </div>
+    
+    <div class="container">
+        <h2>報工時站</h2>
+        <form id="dataForm">
+            <!-- Floor Selection -->
+            <label for="city">樓層:</label>
+            <select id="city" name="city">
+                <option value="">請選擇樓層</option>
+                <option value="1F">1樓</option>
+                <option value="2F">2樓</option>
+                <option value="3F">3樓</option>
+                <option value="4F">4樓</option>
+                <option value="5F">5樓</option>
+            </select><br><br>
+
+            <!-- Name Selection -->
+            <label for="name">班長/帶線人員:</label>
+            <select id="name" name="name">
+                <option value="">請選擇班長</option>
+            </select><br><br>
+
+            <!-- Number of People -->
+            <label for="ppl_num">實際人數:</label>
+            <input type="number" id="ppl_num" name="ppl_num"><br><br>
+
+            <!-- Actual Hours -->
+            <label for="time">實際工時:</label>
+            <input type="number" id="time" name="time"><br><br>
+
+            <!-- Add Data Button -->
+            <button type="button" id="addButton">Add Data</button>
+        </form>
+
+        <!-- Download Data Section -->
+        <h2>Download Data</h2>
+        <button id="downloadButton">Download Excel</button>
+    </div>
+
+    <!-- JavaScript for functionality -->
+    <script>
+        // Initialize font size
+        let currentFontSize = 16; // Default font size in pixels
+
+        function updateFontSize() {
+            document.body.style.fontSize = currentFontSize + 'px';
+        }
+
+        document.getElementById('increaseFont').addEventListener('click', function() {
+            currentFontSize += 2; // Increase font size by 2px
+            updateFontSize();
+        });
+
+        document.getElementById('decreaseFont').addEventListener('click', function() {
+            currentFontSize = Math.max(12, currentFontSize - 2); // Decrease font size by 2px, but not below 12px
+            updateFontSize();
+        });
+
+        // Populate name options based on floor selection
+        const nameOptions = {
+            "1F": ["張三"],
+            "2F": ["王五", "趙六"],
+            "3F": ["孫七", "周八"],
+            "4F": ["吳九", "鄭十"],
+            "5F": ["錢一", "周二"]
+        };
+
+        document.getElementById('city').addEventListener('change', function () {
+            const city = this.value;
+            const nameSelect = document.getElementById('name');
+            
+            // Clear existing options
+            nameSelect.innerHTML = '<option value="">請選擇班長</option>';
+            
+            // Populate new options and auto-select if only one option
+            if (nameOptions[city]) {
+                nameOptions[city].forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.text = name;
+                    nameSelect.add(option);
+                });
+
+                if (nameOptions[city].length === 1) {
+                    nameSelect.value = nameOptions[city][0];
+                }
+            }
+        });
+
+        let data = [];
+
+        document.getElementById('addButton').addEventListener('click', function () {
+            const city = document.getElementById('city').value;
+            const name = document.getElementById('name').value;
+            const ppl_num = document.getElementById('ppl_num').value;
+            const time = document.getElementById('time').value;
+
+            // Check if required fields are filled
+            if (!city) {
+                alert('Please select a floor');
+                return;
+            }
+
+            if (!name) {
+                alert('Please select a name');
+                return;
+            }
+
+            if (!ppl_num) {
+                alert('Please fill in the actual number of people');
+                return;
+            }
+
+            if (!time) {
+                alert('Please fill in the actual hours');
+                return;
+            }
+
+            // If all fields are filled
+            const id = `${name}-${city}`; // Create unique identifier based on name and city
+            data.push({ ID: id, 樓層: city, 班長: name, 實際人數: parseInt(ppl_num), 實際工時: parseInt(time) });
+
+            alert('Data added!');
+            document.getElementById('dataForm').reset(); // Reset form fields
+        });
+
+        document.getElementById('downloadButton').addEventListener('click', function () {
+            if (data.length === 0) {
+                alert('No data to download');
+                return;
+            }
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+            XLSX.writeFile(wb, 'data.xlsx');
+        });
+
+        // Initialize font size
+        updateFontSize();
+    </script>
+</body>
+</html>
